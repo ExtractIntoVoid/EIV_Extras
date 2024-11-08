@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35219.272
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EIV_DataPack.ConsoleApp", "EIV_DataPack.Console\EIV_DataPack.ConsoleApp.csproj", "{DAB23139-37EA-425F-BDF9-053130A074BE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DAB23139-37EA-425F-BDF9-053130A074BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAB23139-37EA-425F-BDF9-053130A074BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAB23139-37EA-425F-BDF9-053130A074BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAB23139-37EA-425F-BDF9-053130A074BE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4100B9FD-C0EE-406F-BC78-28987A1682D8}
+	EndGlobalSection
+EndGlobal
