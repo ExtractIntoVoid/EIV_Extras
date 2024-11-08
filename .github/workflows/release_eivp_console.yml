@@ -19,6 +19,9 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
+        source-url: ${{ secrets.EIV_NUGET }}
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.GH_READ_NUGET }}
     - name: Publish
       run: dotnet publish EIV_DataPack.Console/EIV_DataPack.ConsoleApp.csproj /p:PublishProfile=ReleaseLinux
     - name: Upload artifact (Linux)
@@ -36,6 +39,9 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
+        source-url: ${{ secrets.EIV_NUGET }}
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.GH_READ_NUGET }}
     - name: Publish
       run: dotnet publish EIV_DataPack.Console/EIV_DataPack.ConsoleApp.csproj /p:PublishProfile=ReleaseWin
     - name: Upload artifact (Win)
