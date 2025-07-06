@@ -1,5 +1,4 @@
-﻿using System.CommandLine;
-using System.CommandLine.Parsing;
+﻿using CommandLine;
 
 namespace EIV_DataPack.ConsoleApp;
 
@@ -7,128 +6,82 @@ internal class Program
 {
     static void Main(string[] args)
     {
-        #region options
-        var fileOption = new Option<FileInfo>(
-            name: "--file",
-            description: "The file to to manipulate.");
-
-        var dirOption = new Option<DirectoryInfo>(
-            name: "--dir",
-            description: "The directory to create from.");
-
-        var recursiveOption = new Option<bool>(
-            name: "--recursive",
-            description: "Recursive create from Directory.");
-
-        var extractdirOption = new Option<DirectoryInfo>(
-            name: "--dir",
-            description: "The directory to extract to.");
-
-        var exactFile = new Option<string?>(
-            name: "--path",
-            description: "The exact file path to extract.");
-
-        #endregion
-        #region commands
-        var listCommand = new Command("list", "List all files from the .eivp file")
-        {
-            fileOption
-        };
-        listCommand.SetHandler(ListFiles, fileOption);
-
-        var createCommand = new Command("create", "Create .eivp file from the directory")
-        {
-            fileOption,
-            dirOption,
-            recursiveOption
-        };
-        createCommand.SetHandler(CreateEIVP, fileOption, dirOption, recursiveOption);
-
-        var extractCommand = new Command("extract", "Extract specific file from the .eivp Pack to a directory")
-        {
-            fileOption,
-            extractdirOption,
-            exactFile
-        };
-        extractCommand.SetHandler(ExtractSpecific, fileOption, extractdirOption, exactFile);
-
-        #endregion
-
-        var rootCommand = new RootCommand("EIV DataPack file manipulator");
-        rootCommand.AddCommand(listCommand);
-        rootCommand.AddCommand(createCommand);
-        rootCommand.AddCommand(extractCommand);
-        rootCommand.Invoke(args);
+        bool ret = Parser.Default.ParseArguments<ListOptions, CreateOptions, ExtractOptions, FileVersionOption>(args)
+            .MapResult(
+              (ListOptions opts) => ListFiles(opts.File),
+              (CreateOptions opts) => CreateEIVP(opts.File, opts.Dir, opts.Recursive),
+              (ExtractOptions opts) => ExtractSpecific(opts.File, opts.Dir, opts.Path),
+              (FileVersionOption opts) => ShowVersion(opts.File),
+              errs => false);
+        Console.WriteLine(ret);
     }
 
-    static void ListFiles(FileInfo fileInfo)
+    static bool ShowVersion(string FileName)
     {
-        if (fileInfo.Exists)
-        {
-            var datapackCreator = DatapackCreator.Read(fileInfo.FullName);
-            var reader = datapackCreator.GetReader();
-            if (reader == null)
-                return;
-            reader.ReadFileNames(false);
-            reader.Pack.FileNames.ForEach(Console.WriteLine);
-        }
-        else
+        if (!File.Exists(FileName))
         {
             Console.WriteLine("File not Exists!");
+            return false;
         }
+        var datapackCreator = DatapackManager.Read(FileName);
+        var reader = datapackCreator.GetReader();
+        if (reader == null)
+            return false;
+        Console.WriteLine(reader.Pack.Version);
+        return true;
     }
 
-    static void CreateEIVP(FileInfo fileInfo, DirectoryInfo directory, bool rec)
+    static bool ListFiles(string FileName)
     {
-        var datapack = DatapackCreator.Create(fileInfo.FullName);
+        if (!File.Exists(FileName))
+        {
+            Console.WriteLine("File not Exists!");
+            return false;
+        }
+        var datapackCreator = DatapackManager.Read(FileName);
+        var reader = datapackCreator.GetReader();
+        if (reader == null)
+            return false;
+        reader.ReadFileNames();
+        foreach (string item in reader.Pack.FileNames)
+            Console.WriteLine(item);
+        return true;
+    }
+
+    static bool CreateEIVP(string fileName, string directory, bool rec)
+    {
+        var datapack = DatapackManager.Create(fileName);
         var writer = datapack.GetWriter();
         if (writer == null)
-            return;
-        writer.AddDirectory(directory.FullName, rec);
+            return false;
+        writer.AddDirectory(directory, rec);
         writer.Save();
         Console.WriteLine("File Saved!");
+        return true;
     }
 
-    static void ExtractAll(FileInfo fileInfo, DirectoryInfo directory)
+    static bool ExtractSpecific(string fileName, string directory, string? file)
     {
-        if (fileInfo.Exists)
-        {
-            var datapackCreator = DatapackCreator.Read(fileInfo.FullName);
-            var reader = datapackCreator.GetReader();
-            if (reader == null)
-                return;
-            reader.ReadFileNames(false);
-            
-        }
-        else
+        if (!File.Exists(fileName))
         {
             Console.WriteLine("File not Exists!");
+            return false;
         }
-    }
-    static void ExtractSpecific(FileInfo fileInfo, DirectoryInfo directory, string? file)
-    {
-        if (fileInfo.Exists)
+        var datapackCreator = DatapackManager.Read(fileName);
+        var reader = datapackCreator.GetReader();
+        if (reader == null)
+            return false;
+        if (file == null)
         {
-            var datapackCreator = DatapackCreator.Read(fileInfo.FullName);
-            var reader = datapackCreator.GetReader();
-            if (reader == null)
-                return;
-            reader.ReadFileNames(false);
-            if (file == null)
-            {
-                reader.Pack.FileNames.ForEach(x => reader.ExportFile(x, Path.Combine(directory.FullName, x)));
-                return;
-            }
-            if (!reader.Pack.FileNames.Contains(file))
-            {
-                Console.WriteLine("File to extract is not exists inside the pack!");
-                return;
-            }
-            reader.ExportFile(file, Path.Combine(directory.FullName, file));
+            reader.Pack.FileNames.ToList().ForEach(x => reader.ExportFile(x, Path.Combine(directory, x)));
+            return false;
         }
-        else
+        if (!reader.Pack.FileNames.Contains(file))
         {
-            Console.WriteLine("File not Exists!");
+            Console.WriteLine("File to extract is not exists inside the pack!");
+            return false;
         }
+        reader.ExportFile(file, Path.Combine(directory, file));
+        return true;
     }
 }
